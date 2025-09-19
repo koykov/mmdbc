@@ -1,3 +1,3 @@
-# MaxMind DB Query Language
+# MaxMind DB Client
 
 todo...
