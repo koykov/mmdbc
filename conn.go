@@ -19,6 +19,12 @@ func Connect(filePath string) (_ Connection, err error) {
 	if c.f, err = os.Open(filePath); err != nil {
 		return
 	}
+	i, err := c.f.Seek(0, io.SeekEnd)
+	if err != nil {
+		return
+	}
+	_ = i
+	// todo read meta
 	return &c, nil
 }
 
