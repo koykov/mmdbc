@@ -23,7 +23,8 @@ func Connect(filePath string) (_ Connection, err error) {
 }
 
 type conn struct {
-	f *os.File
+	f    *os.File
+	meta Meta
 }
 
 func (c *conn) Get(ip netip.Addr) (*Tuple, error) {
@@ -47,5 +48,6 @@ func (c *conn) PGets(dst *Tuple, ip string) error {
 }
 
 func (c *conn) Close() error {
+	c.meta.reset()
 	return c.f.Close()
 }
