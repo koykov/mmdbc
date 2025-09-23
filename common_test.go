@@ -2,63 +2,100 @@ package mmdbc
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	"testing"
 )
 
 func init() {
-	dbs := map[string]string{
-		"GeoIP2-Anonymous-IP-Test.mmdb":                "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Anonymous-IP-Test.mmdb",
-		"GeoIP2-City-Shield-Test.mmdb":                 "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-City-Shield-Test.mmdb",
-		"GeoIP2-City-Test-Broken-Double-Format.mmdb":   "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-City-Test-Broken-Double-Format.mmdb",
-		"GeoIP2-City-Test-Invalid-Node-Count.mmdb":     "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-City-Test-Invalid-Node-Count.mmdb",
-		"GeoIP2-City-Test.mmdb":                        "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-City-Test.mmdb",
-		"GeoIP2-Connection-Type-Test.mmdb":             "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Connection-Type-Test.mmdb",
-		"GeoIP2-Country-Shield-Test.mmdb":              "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Country-Shield-Test.mmdb",
-		"GeoIP2-Country-Test.mmdb":                     "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Country-Test.mmdb",
-		"GeoIP2-DensityIncome-Test.mmdb":               "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-DensityIncome-Test.mmdb",
-		"GeoIP2-Domain-Test.mmdb":                      "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Domain-Test.mmdb",
-		"GeoIP2-Enterprise-Shield-Test.mmdb":           "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Enterprise-Shield-Test.mmdb",
-		"GeoIP2-Enterprise-Test.mmdb":                  "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Enterprise-Test.mmdb",
-		"GeoIP2-IP-Risk-Test.mmdb":                     "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-IP-Risk-Test.mmdb",
-		"GeoIP2-ISP-Test.mmdb":                         "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-ISP-Test.mmdb",
-		"GeoIP2-Precision-Enterprise-Shield-Test.mmdb": "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Precision-Enterprise-Shield-Test.mmdb",
-		"GeoIP2-Precision-Enterprise-Test.mmdb":        "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Precision-Enterprise-Test.mmdb",
-		"GeoIP2-Static-IP-Score-Test.mmdb":             "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-Static-IP-Score-Test.mmdb",
-		"GeoIP2-User-Count-Test.mmdb":                  "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP2-User-Count-Test.mmdb",
-		"GeoIP-Anonymous-Plus.mmdb":                    "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP-Anonymous-Plus.mmdb",
-		"GeoIP-Anonymous-Plus-Test.mmdb":               "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoIP-Anonymous-Plus-Test.mmdb",
-		"GeoLite2-ASN-Test.mmdb":                       "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoLite2-ASN-Test.mmdb",
-		"GeoLite2-City-Test.mmdb":                      "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoLite2-City-Test.mmdb",
-		"GeoLite2-Country-Test.mmdb":                   "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/GeoLite2-Country-Test.mmdb",
-		"MaxMind-DB-no-ipv4-search-tree.mmdb":          "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-no-ipv4-search-tree.mmdb",
-		"MaxMind-DB-string-value-entries.mmdb":         "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-string-value-entries.mmdb",
-		"MaxMind-DB-test-broken-pointers-24.mmdb":      "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-broken-pointers-24.mmdb",
-		"MaxMind-DB-test-broken-search-tree-24.mmdb":   "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-broken-search-tree-24.mmdb",
-		"MaxMind-DB-test-decoder.mmdb":                 "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-decoder.mmdb",
-		"MaxMind-DB-test-ipv4-24.mmdb":                 "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-ipv4-24.mmdb",
-		"MaxMind-DB-test-ipv4-28.mmdb":                 "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-ipv4-28.mmdb",
-		"MaxMind-DB-test-ipv4-32.mmdb":                 "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-ipv4-32.mmdb",
-		"MaxMind-DB-test-ipv6-24.mmdb":                 "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-ipv6-24.mmdb",
-		"MaxMind-DB-test-ipv6-28.mmdb":                 "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-ipv6-28.mmdb",
-		"MaxMind-DB-test-ipv6-32.mmdb":                 "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-ipv6-32.mmdb",
-		"MaxMind-DB-test-metadata-pointers.mmdb":       "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-metadata-pointers.mmdb",
-		"MaxMind-DB-test-mixed-24.mmdb":                "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-mixed-24.mmdb",
-		"MaxMind-DB-test-mixed-28.mmdb":                "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-mixed-28.mmdb",
-		"MaxMind-DB-test-mixed-32.mmdb":                "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-mixed-32.mmdb",
-		"MaxMind-DB-test-nested.mmdb":                  "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-nested.mmdb",
-		"MaxMind-DB-test-pointer-decoder.mmdb":         "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/MaxMind-DB-test-pointer-decoder.mmdb",
+	dbs := []string{
+		"GeoIP2-Anonymous-IP-Test",
+		"GeoIP2-City-Shield-Test",
+		"GeoIP2-City-Test-Broken-Double-Format",
+		"GeoIP2-City-Test-Invalid-Node-Count",
+		"GeoIP2-City-Test",
+		"GeoIP2-Connection-Type-Test",
+		"GeoIP2-Country-Shield-Test",
+		"GeoIP2-Country-Test",
+		"GeoIP2-DensityIncome-Test",
+		"GeoIP2-Domain-Test",
+		"GeoIP2-Enterprise-Shield-Test",
+		"GeoIP2-Enterprise-Test",
+		"GeoIP2-IP-Risk-Test",
+		"GeoIP2-ISP-Test",
+		"GeoIP2-Precision-Enterprise-Shield-Test",
+		"GeoIP2-Precision-Enterprise-Test",
+		"GeoIP2-Static-IP-Score-Test",
+		"GeoIP2-User-Count-Test",
+		"GeoIP-Anonymous-Plus",
+		"GeoIP-Anonymous-Plus-Test",
+		"GeoLite2-ASN-Test",
+		"GeoLite2-City-Test",
+		"GeoLite2-Country-Test",
+		"MaxMind-DB-no-ipv4-search-tree",
+		"MaxMind-DB-string-value-entries",
+		"MaxMind-DB-test-broken-pointers-24",
+		"MaxMind-DB-test-broken-search-tree-24",
+		"MaxMind-DB-test-decoder",
+		"MaxMind-DB-test-ipv4-24",
+		"MaxMind-DB-test-ipv4-28",
+		"MaxMind-DB-test-ipv4-32",
+		"MaxMind-DB-test-ipv6-24",
+		"MaxMind-DB-test-ipv6-28",
+		"MaxMind-DB-test-ipv6-32",
+		"MaxMind-DB-test-metadata-pointers",
+		"MaxMind-DB-test-mixed-24",
+		"MaxMind-DB-test-mixed-28",
+		"MaxMind-DB-test-mixed-32",
+		"MaxMind-DB-test-nested",
+		"MaxMind-DB-test-pointer-decoder",
 	}
-	for fname, fpath := range dbs {
-		absfn := "/tmp/" + fname
-		err := downloadTestDB(fpath, absfn)
-		if err != nil {
-			println(err.Error())
+	const (
+		wc  = 8
+		tmp = "/tmp/mmdb-test"
+	)
+	if _, err := os.Stat(tmp); errors.Is(err, os.ErrNotExist) {
+		if err = os.Mkdir(tmp, 0777); err != nil {
+			panic(err)
 		}
 	}
+	ch := make(chan string, wc)
+	ctx, cancel := context.WithCancel(context.Background())
+	var wg sync.WaitGroup
+	for i := 0; i < wc; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					fname := <-ch
+					absfn := tmp + "/" + fname + ".mmdb"
+					fpath := "https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/" + fname + ".mmdb"
+					err := downloadTestDB(fpath, absfn)
+					if err != nil {
+						println(err.Error())
+					}
+				}
+			}
+		}()
+	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < len(dbs); i++ {
+			ch <- dbs[i]
+		}
+		cancel()
+	}()
+	wg.Wait()
+	close(ch)
 }
 
 func downloadTestDB(path, dst string) error {
