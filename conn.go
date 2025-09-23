@@ -16,20 +16,24 @@ type Connection interface {
 
 func Connect(filePath string) (_ Connection, err error) {
 	var c conn
-	if c.f, err = os.Open(filePath); err != nil {
+	var f *os.File
+	if f, err = os.Open(filePath); err != nil {
 		return
 	}
-	i, err := c.f.Seek(0, io.SeekEnd)
+	fi, err := f.Stat()
 	if err != nil {
 		return
 	}
-	_ = i
+	c.buf = make([]byte, fi.Size())
+	if _, err = io.ReadFull(f, c.buf); err != nil {
+		return
+	}
 	// todo read meta
 	return &c, nil
 }
 
 type conn struct {
-	f    *os.File
+	buf  []byte
 	meta Meta
 }
 
@@ -55,5 +59,5 @@ func (c *conn) PGets(dst *Tuple, ip string) error {
 
 func (c *conn) Close() error {
 	c.meta.reset()
-	return c.f.Close()
+	return nil
 }
