@@ -6,7 +6,7 @@ type Meta struct {
 	desc    map[string]string
 	dbType  string
 	lang    []string
-	ver     version.Version64
+	bfver   version.Version64
 	epoch   uint64
 	ipVer   uint64
 	nodec   uint64
@@ -31,12 +31,12 @@ func (m *Meta) Languages() []string {
 	return m.lang
 }
 
-func (m *Meta) MajorVersion() uint64 {
-	return uint64(m.ver.Major())
+func (m *Meta) BinaryFormatMajorVersion() uint64 {
+	return uint64(m.bfver.Major())
 }
 
-func (m *Meta) MinorVersion() uint64 {
-	return uint64(m.ver.Minor())
+func (m *Meta) BinaryFormatMinorVersion() uint64 {
+	return uint64(m.bfver.Minor())
 }
 
 func (m *Meta) BuildEpoch() uint64 {
@@ -61,7 +61,7 @@ func (m *Meta) reset() {
 	}
 	m.dbType = ""
 	m.lang = m.lang[:0]
-	m.ver.Reset()
+	m.bfver.Reset()
 	m.epoch = 0
 	m.ipVer = 0
 	m.nodec = 0
