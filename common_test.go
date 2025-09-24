@@ -122,7 +122,7 @@ func downloadTestDB(path, dst string) error {
 			if n == 0 {
 				break
 			}
-			if _, err = dfh.Write(buf); err != nil {
+			if _, err = dfh.Write(buf[:n]); err != nil {
 				return err
 			}
 		}
