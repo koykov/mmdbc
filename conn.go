@@ -1,10 +1,13 @@
 package mmdbc
 
 import (
+	"bytes"
 	"io"
 	"net/netip"
 	"os"
 )
+
+const metaPrefix = "\xAB\xCD\xEFMaxMind.com"
 
 type Connection interface {
 	Get(ip netip.Addr) (*Tuple, error)
@@ -14,8 +17,7 @@ type Connection interface {
 	io.Closer
 }
 
-func Connect(filePath string) (_ Connection, err error) {
-	var c conn
+func Connect(filePath string) (c Connection, err error) {
 	var f *os.File
 	if f, err = os.Open(filePath); err != nil {
 		return
@@ -24,16 +26,26 @@ func Connect(filePath string) (_ Connection, err error) {
 	if err != nil {
 		return
 	}
-	c.buf = make([]byte, fi.Size())
-	if _, err = io.ReadFull(f, c.buf); err != nil {
+	cn := &conn{buf: make([]byte, fi.Size())}
+	if _, err = io.ReadFull(f, cn.buf); err != nil {
 		return
 	}
-	// todo read meta
-	return &c, nil
+	i := bytes.LastIndex(cn.buf, []byte(metaPrefix))
+	if i == -1 {
+		err = ErrMetaNotFound
+		return
+	}
+	cn.bufm = cn.buf[i+len(metaPrefix):]
+	if err = cn.parseMeta(); err != nil {
+		return
+	}
+	c = cn
+	return
 }
 
 type conn struct {
 	buf  []byte
+	bufm []byte
 	meta Meta
 }
 
@@ -59,5 +71,10 @@ func (c *conn) PGets(dst *Tuple, ip string) error {
 
 func (c *conn) Close() error {
 	c.meta.reset()
+	return nil
+}
+
+func (c *conn) parseMeta() error {
+	// todo implement me
 	return nil
 }
