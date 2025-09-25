@@ -36,7 +36,7 @@ func Connect(filePath string) (c Connection, err error) {
 		return
 	}
 	cn.bufm = cn.buf[i+len(metaPrefix):]
-	if err = cn.parseMeta(); err != nil {
+	if err = cn.decodeMeta(); err != nil {
 		return
 	}
 	c = cn
@@ -71,10 +71,5 @@ func (c *conn) PGets(dst *Tuple, ip string) error {
 
 func (c *conn) Close() error {
 	c.meta.reset()
-	return nil
-}
-
-func (c *conn) parseMeta() error {
-	// todo implement me
 	return nil
 }

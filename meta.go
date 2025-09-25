@@ -1,6 +1,10 @@
 package mmdbc
 
-import "github.com/koykov/version"
+import (
+	"bytes"
+
+	"github.com/koykov/version"
+)
 
 type Meta struct {
 	desc    map[string]string
@@ -66,4 +70,47 @@ func (m *Meta) reset() {
 	m.ipVer = 0
 	m.nodec = 0
 	m.recSize = 0
+}
+
+func (c *conn) decodeMeta() error {
+	for i := 0; i < len(metaKeys); i++ {
+		key := metaKeys[i]
+		idx := bytes.Index(c.bufm, metaBKeys[i])
+		if idx == -1 {
+			continue
+		}
+		switch key {
+		case "node_count":
+		case "record_size":
+		case "ip_version":
+		case "binary_format_major_version":
+		case "binary_format_minor_version":
+		case "build_epoch":
+		case "database_type":
+		case "languages":
+		case "description":
+		}
+	}
+	return nil
+}
+
+var (
+	metaKeys = []string{
+		"node_count",
+		"record_size",
+		"ip_version",
+		"binary_format_major_version",
+		"binary_format_minor_version",
+		"build_epoch",
+		"database_type",
+		"languages",
+		"description",
+	}
+	metaBKeys [][]byte
+)
+
+func init() {
+	for i := range metaKeys {
+		metaBKeys = append(metaBKeys, []byte(metaKeys[i]))
+	}
 }
