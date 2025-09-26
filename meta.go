@@ -2,15 +2,14 @@ package mmdbc
 
 import (
 	"bytes"
-
-	"github.com/koykov/version"
 )
 
 type Meta struct {
 	desc    map[string]string
 	dbType  string
 	lang    []string
-	bfver   version.Version64
+	bfmaj   uint64
+	bfmin   uint64
 	epoch   uint64
 	ipVer   uint64
 	nodec   uint64
@@ -36,11 +35,11 @@ func (m *Meta) Languages() []string {
 }
 
 func (m *Meta) BinaryFormatMajorVersion() uint64 {
-	return uint64(m.bfver.Major())
+	return m.bfmaj
 }
 
 func (m *Meta) BinaryFormatMinorVersion() uint64 {
-	return uint64(m.bfver.Minor())
+	return m.bfmin
 }
 
 func (m *Meta) BuildEpoch() uint64 {
@@ -65,7 +64,8 @@ func (m *Meta) reset() {
 	}
 	m.dbType = ""
 	m.lang = m.lang[:0]
-	m.bfver.Reset()
+	m.bfmaj = 0
+	m.bfmin = 0
 	m.epoch = 0
 	m.ipVer = 0
 	m.nodec = 0
@@ -79,13 +79,31 @@ func (c *conn) decodeMeta() error {
 		if idx == -1 {
 			continue
 		}
+
+		off := idx + len(metaBKeys[i]) + 1
+		ctrlb := c.bufm[off]
+		et := entryType(ctrlb >> 5)
+		_ = et
+		size := ctrlb & 0x1f
 		switch key {
 		case "node_count":
+			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
+			c.meta.nodec = uint64(v)
 		case "record_size":
+			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
+			c.meta.recSize = uint64(v)
 		case "ip_version":
+			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
+			c.meta.ipVer = uint64(v)
 		case "binary_format_major_version":
+			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
+			c.meta.bfmaj = uint64(v)
 		case "binary_format_minor_version":
+			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
+			c.meta.bfmin = uint64(v)
 		case "build_epoch":
+			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
+			c.meta.epoch = uint64(v)
 		case "database_type":
 		case "languages":
 		case "description":
