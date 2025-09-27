@@ -1,4 +1,4 @@
-package mmdbc
+package mmdbcli
 
 type entryType uint8
 

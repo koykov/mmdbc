@@ -1,4 +1,4 @@
-package mmdbc
+package mmdbcli
 
 import (
 	"bufio"
@@ -130,4 +130,4 @@ func downloadTestDB(path, dst string) error {
 	return nil
 }
 
-func TestMMDBC(t *testing.T) {}
+func TestMMDBCli(t *testing.T) {}

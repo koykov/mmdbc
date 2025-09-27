@@ -1,4 +1,4 @@
-module github.com/koykov/mmdbql
+module github.com/koykov/mmdbcli
 
 go 1.25
 
