@@ -1,9 +1,5 @@
 package mmdbcli
 
-import (
-	"bytes"
-)
-
 type Meta struct {
 	desc    map[string]string
 	dbType  string
@@ -73,19 +69,29 @@ func (m *Meta) reset() {
 }
 
 func (c *conn) decodeMeta() error {
-	for i := 0; i < len(metaKeys); i++ {
-		key := metaKeys[i]
-		idx := bytes.Index(c.bufm, metaBKeys[i])
-		if idx == -1 {
-			continue
-		}
+	var off int
+	ctrlb := c.bufm[off]
+	et := entryType(ctrlb >> 5)
+	if et != entryMap {
+		return ErrMetaRootMustBeMap
+	}
+	size := ctrlb & 0x1f
+	if size == 0 {
+		return ErrMetaEmpty
+	}
+	off++
 
-		off := idx + len(metaBKeys[i]) + 1
-		ctrlb := c.bufm[off]
-		et := entryType(ctrlb >> 5)
-		_ = et
-		size := ctrlb & 0x1f
-		switch key {
+	for i := 0; i < int(size); i++ {
+		ctrlb = c.bufm[off]
+		et1 := entryType(ctrlb >> 5)
+		if et1 != entryString {
+			return ErrMetaKeyMustBeString
+		}
+		size1 := ctrlb & 0x1f
+		off++
+		key := c.bufm[off : off+int(size1)]
+		off += int(size1)
+		switch string(key) {
 		case "node_count":
 			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
 			c.meta.nodec = uint64(v)
