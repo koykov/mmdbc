@@ -1,6 +1,9 @@
 package mmdbcli
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 type Meta struct {
 	desc    map[string]string
@@ -109,7 +112,7 @@ func (c *conn) decodeMeta() error {
 		case "binary_format_minor_version":
 			off, err = c.mustUint16(off, &c.meta.bfmin)
 		case "build_epoch":
-			off, err = c.mustUint16(off, &c.meta.epoch)
+			off, err = c.mustUint64(off, &c.meta.epoch)
 		case "database_type":
 			// todo implement me
 		case "languages":
@@ -132,12 +135,34 @@ func (c *conn) mustUint16(off int, result *uint64) (int, error) {
 	etype := entryType(ctrlb >> 5)
 	if etype != entryUint16 {
 		println(etype) // todo remove me
-		return off, ErrMetaValueMustBeUin16
+		return off, ErrMetaValueMustBeUint16
 	}
 	size := ctrlb & 0x1f
 	v, _, err := decodeUint16(c.bufm, uint64(off), uint64(size))
 	off += int(size)
 	*result = uint64(v)
+	return off, err
+}
+
+func (c *conn) mustUint64(off int, result *uint64) (int, error) {
+	ctrlb := c.bufm[off]
+	off++
+	etype := entryType(ctrlb >> 5)
+	if etype == entryExtended {
+		if off > len(c.bufm) {
+			return off, io.ErrUnexpectedEOF
+		}
+		etype = entryType(c.bufm[off] + 7)
+		off++
+	}
+	if etype != entryUint64 {
+		println(etype) // todo remove me
+		return off, ErrMetaValueMustBeUint64
+	}
+	size := ctrlb & 0x1f
+	v, _, err := decodeUint64(c.bufm, uint64(off), uint64(size))
+	off += int(size)
+	*result = v
 	return off, err
 }
 
