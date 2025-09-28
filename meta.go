@@ -1,5 +1,7 @@
 package mmdbcli
 
+import "fmt"
+
 type Meta struct {
 	desc    map[string]string
 	dbType  string
@@ -85,37 +87,57 @@ func (c *conn) decodeMeta() error {
 		ctrlb = c.bufm[off]
 		et1 := entryType(ctrlb >> 5)
 		if et1 != entryString {
+			println(string(c.bufm[off : off+30]))
+			println(et1)
 			return ErrMetaKeyMustBeString
 		}
 		size1 := ctrlb & 0x1f
 		off++
-		key := c.bufm[off : off+int(size1)]
+		key := string(c.bufm[off : off+int(size1)])
 		off += int(size1)
-		switch string(key) {
+		println(key)
+		var err error
+		switch key {
 		case "node_count":
-			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
-			c.meta.nodec = uint64(v)
+			off, err = c.mustUint16(off, &c.meta.nodec)
 		case "record_size":
-			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
-			c.meta.recSize = uint64(v)
+			off, err = c.mustUint16(off, &c.meta.recSize)
 		case "ip_version":
-			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
-			c.meta.ipVer = uint64(v)
+			off, err = c.mustUint16(off, &c.meta.ipVer)
 		case "binary_format_major_version":
-			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
-			c.meta.bfmaj = uint64(v)
+			off, err = c.mustUint16(off, &c.meta.bfmaj)
 		case "binary_format_minor_version":
-			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
-			c.meta.bfmin = uint64(v)
+			off, err = c.mustUint16(off, &c.meta.bfmin)
 		case "build_epoch":
-			v, _, _ := decodeUint16(c.bufm, uint64(off), uint64(size))
-			c.meta.epoch = uint64(v)
+			off, err = c.mustUint16(off, &c.meta.epoch)
 		case "database_type":
+			// todo implement me
 		case "languages":
+			// todo implement me
 		case "description":
+			// todo implement me
+		default:
+			return fmt.Errorf("unknown meta key '%s'", key)
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func (c *conn) mustUint16(off int, result *uint64) (int, error) {
+	ctrlb := c.bufm[off]
+	off++
+	etype := entryType(ctrlb >> 5)
+	if etype != entryUint16 {
+		return off, ErrMetaValueMustBeUin16
+	}
+	size := ctrlb & 0x1f
+	v, _, err := decodeUint16(c.bufm, uint64(off), uint64(size))
+	off += int(size)
+	*result = uint64(v)
+	return off, err
 }
 
 var (
