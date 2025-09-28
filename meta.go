@@ -87,15 +87,15 @@ func (c *conn) decodeMeta() error {
 		ctrlb = c.bufm[off]
 		et1 := entryType(ctrlb >> 5)
 		if et1 != entryString {
-			println(string(c.bufm[off : off+30]))
-			println(et1)
+			println(string(c.bufm[off : off+30])) // todo remove me
+			println(et1)                          // todo remove me
 			return ErrMetaKeyMustBeString
 		}
 		size1 := ctrlb & 0x1f
 		off++
 		key := string(c.bufm[off : off+int(size1)])
 		off += int(size1)
-		println(key)
+		println(key) // todo remove me
 		var err error
 		switch key {
 		case "node_count":
@@ -131,6 +131,7 @@ func (c *conn) mustUint16(off int, result *uint64) (int, error) {
 	off++
 	etype := entryType(ctrlb >> 5)
 	if etype != entryUint16 {
+		println(etype) // todo remove me
 		return off, ErrMetaValueMustBeUin16
 	}
 	size := ctrlb & 0x1f
