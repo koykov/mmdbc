@@ -133,6 +133,13 @@ func (c *conn) mustUint16(off int, result *uint64) (int, error) {
 	ctrlb := c.bufm[off]
 	off++
 	etype := entryType(ctrlb >> 5)
+	if etype == entryExtended {
+		if off > len(c.bufm) {
+			return off, io.ErrUnexpectedEOF
+		}
+		etype = entryType(c.bufm[off] + 7)
+		off++
+	}
 	if etype != entryUint16 {
 		println(etype) // todo remove me
 		return off, ErrMetaValueMustBeUint16
