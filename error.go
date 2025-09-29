@@ -9,5 +9,6 @@ var (
 	ErrMetaValueMustBeUint16 = errors.New("meta value must be uint16 number")
 	ErrMetaValueMustBeUint64 = errors.New("meta value must be uint64 number")
 	ErrMetaValueMustBeString = errors.New("meta value must be string")
+	ErrMetaValueMustBeMap    = errors.New("meta value must be map")
 	ErrMetaEmpty             = errors.New("meta is empty")
 )

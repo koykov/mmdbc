@@ -76,6 +76,10 @@ func (m *Meta) reset() {
 }
 
 func (c *conn) decodeMeta() error {
+	if c.meta.desc == nil {
+		c.meta.desc = make(map[string]string)
+	}
+
 	var off int
 	ctrlb := c.bufm[off]
 	et := entryType(ctrlb >> 5)
@@ -120,7 +124,23 @@ func (c *conn) decodeMeta() error {
 		case "languages":
 			// todo implement me
 		case "description":
-			// todo implement me
+			ctrlb = c.bufm[off]
+			et2 := entryType(ctrlb >> 5)
+			if et2 != entryMap {
+				return ErrMetaValueMustBeMap
+			}
+			size2 := ctrlb & 0x1f
+			off++
+			for i := 0; i < int(size2); i++ {
+				var k, v string
+				if off, err = c.mustString(off, &k); err != nil {
+					break
+				}
+				if off, err = c.mustString(off, &v); err != nil {
+					break
+				}
+				c.meta.desc[k] = v
+			}
 		default:
 			return fmt.Errorf("unknown meta key '%s'", key)
 		}
