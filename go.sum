@@ -1,4 +1,2 @@
 github.com/koykov/byteconv v1.0.1 h1:5Yb6++P+HnipDW/V9rHXR7CyS0ZFncspT4isvt65fFA=
 github.com/koykov/byteconv v1.0.1/go.mod h1:viZknv/akQJrXOQS3bZu2U7TE+gjA03LFQpSsRExZR4=
-github.com/koykov/version v0.0.0-20241114203645-9f228ecd8810 h1:IsszkxehQ6yZCnRz/GIkPFYzI55vxQ1irzgQmOquCWU=
-github.com/koykov/version v0.0.0-20241114203645-9f228ecd8810/go.mod h1:lIuWno0uMkeY8WFFvcreZXqAJhw9grGYKaWCc/abwZk=

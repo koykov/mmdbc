@@ -3,6 +3,8 @@ package mmdbcli
 import (
 	"fmt"
 	"io"
+
+	"github.com/koykov/byteconv"
 )
 
 type Meta struct {
@@ -114,7 +116,7 @@ func (c *conn) decodeMeta() error {
 		case "build_epoch":
 			off, err = c.mustUint64(off, &c.meta.epoch)
 		case "database_type":
-			// todo implement me
+			off, err = c.mustString(off, &c.meta.dbType)
 		case "languages":
 			// todo implement me
 		case "description":
@@ -171,6 +173,20 @@ func (c *conn) mustUint64(off int, result *uint64) (int, error) {
 	off += int(size)
 	*result = v
 	return off, err
+}
+
+func (c *conn) mustString(off int, result *string) (int, error) {
+	ctrlb := c.bufm[off]
+	off++
+	etype := entryType(ctrlb >> 5)
+	if etype != entryString {
+		println(etype)
+		return off, ErrMetaValueMustBeString
+	}
+	size := int(ctrlb & 0x1f)
+	*result = byteconv.B2S(c.bufm[off : off+size])
+	off += size
+	return off, nil
 }
 
 var (
