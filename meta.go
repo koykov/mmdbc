@@ -102,7 +102,6 @@ func (c *conn) decodeMeta() error {
 		size1 := ctrlb & 0x1f
 		key := string(c.bufm[off : off+uint64(size1)])
 		off += uint64(size1)
-		println(key) // todo remove me
 		var err error
 		switch key {
 		case "node_count":
@@ -178,7 +177,6 @@ func (c *conn) mustUint16(off uint64, result *uint64) (uint64, error) {
 		off++
 	}
 	if etype != entryUint16 {
-		println(etype) // todo remove me
 		return off, ErrMetaValueMustBeUint16
 	}
 	size := ctrlb & 0x1f
@@ -200,7 +198,6 @@ func (c *conn) mustUint32(off uint64, result *uint64) (uint64, error) {
 		off++
 	}
 	if etype != entryUint32 {
-		println(etype) // todo remove me
 		return off, ErrMetaValueMustBeUint32
 	}
 	size := ctrlb & 0x1f
@@ -222,7 +219,6 @@ func (c *conn) mustUint64(off uint64, result *uint64) (uint64, error) {
 		off++
 	}
 	if etype != entryUint64 {
-		println(etype) // todo remove me
 		return off, ErrMetaValueMustBeUint64
 	}
 	size := ctrlb & 0x1f
@@ -262,7 +258,6 @@ func (c *conn) mustString(off uint64, result *string) (uint64, error) {
 		return off1, nil
 	}
 	if etype != entryString {
-		println(etype)
 		return off, ErrMetaValueMustBeString
 	}
 	*result = byteconv.B2S(c.bufm[off : off+size])
