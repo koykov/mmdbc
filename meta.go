@@ -80,7 +80,7 @@ func (c *conn) decodeMeta() error {
 		c.meta.desc = make(map[string]string)
 	}
 
-	var off int
+	var off uint64
 	ctrlb := c.bufm[off]
 	et := entryType(ctrlb >> 5)
 	if et != entryMap {
@@ -100,8 +100,8 @@ func (c *conn) decodeMeta() error {
 			return ErrMetaKeyMustBeString
 		}
 		size1 := ctrlb & 0x1f
-		key := string(c.bufm[off : off+int(size1)])
-		off += int(size1)
+		key := string(c.bufm[off : off+uint64(size1)])
+		off += uint64(size1)
 		println(key) // todo remove me
 		var err error
 		switch key {
@@ -166,12 +166,12 @@ func (c *conn) decodeMeta() error {
 	return nil
 }
 
-func (c *conn) mustUint16(off int, result *uint64) (int, error) {
+func (c *conn) mustUint16(off uint64, result *uint64) (uint64, error) {
 	ctrlb := c.bufm[off]
 	off++
 	etype := entryType(ctrlb >> 5)
 	if etype == entryExtended {
-		if off > len(c.bufm) {
+		if off > uint64(len(c.bufm)) {
 			return off, io.ErrUnexpectedEOF
 		}
 		etype = entryType(c.bufm[off] + 7)
@@ -183,17 +183,17 @@ func (c *conn) mustUint16(off int, result *uint64) (int, error) {
 	}
 	size := ctrlb & 0x1f
 	v, _, err := decodeUint16(c.bufm, uint64(off), uint64(size))
-	off += int(size)
+	off += uint64(size)
 	*result = uint64(v)
 	return off, err
 }
 
-func (c *conn) mustUint64(off int, result *uint64) (int, error) {
+func (c *conn) mustUint64(off uint64, result *uint64) (uint64, error) {
 	ctrlb := c.bufm[off]
 	off++
 	etype := entryType(ctrlb >> 5)
 	if etype == entryExtended {
-		if off > len(c.bufm) {
+		if off > uint64(len(c.bufm)) {
 			return off, io.ErrUnexpectedEOF
 		}
 		etype = entryType(c.bufm[off] + 7)
@@ -205,37 +205,39 @@ func (c *conn) mustUint64(off int, result *uint64) (int, error) {
 	}
 	size := ctrlb & 0x1f
 	v, _, err := decodeUint64(c.bufm, uint64(off), uint64(size))
-	off += int(size)
+	off += uint64(size)
 	*result = v
 	return off, err
 }
 
-func (c *conn) mustString(off int, result *string) (int, error) {
+func (c *conn) mustString(off uint64, result *string) (uint64, error) {
 	ctrlb := c.bufm[off]
 	off++
 	etype := entryType(ctrlb >> 5)
 	if etype == entryExtended {
-		if off > len(c.bufm) {
+		if off > uint64(len(c.bufm)) {
 			return off, io.ErrUnexpectedEOF
 		}
 		etype = entryType(c.bufm[off] + 7)
 		off++
 	}
-	size := int(ctrlb & 0x1f)
+	size := uint64(ctrlb & 0x1f)
 	if etype == entryPointer {
-		off1, _, err := decodePtr(c.bufm, uint64(off), uint64(size))
+		off, off1, err := decodePtr(c.bufm, off, size)
 		if err != nil {
 			return off, err
 		}
 		if off1 >= uint64(len(c.bufm)) {
 			return off, io.ErrUnexpectedEOF
 		}
-		ctrlb = c.bufm[off1]
+		ctrlb = c.bufm[off]
 		if (ctrlb >> 5) == 1 {
 			return off, ErrBadPointer
 		}
-		*result = byteconv.B2S(c.bufm[off1 : off1+uint64(size)])
-		return int(off1), nil
+		if _, err = c.mustString(off, result); err != nil {
+			return off1, err
+		}
+		return off1, nil
 	}
 	if etype != entryString {
 		println(etype)
