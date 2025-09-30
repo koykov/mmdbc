@@ -10,5 +10,8 @@ var (
 	ErrMetaValueMustBeUint64 = errors.New("meta value must be uint64 number")
 	ErrMetaValueMustBeString = errors.New("meta value must be string")
 	ErrMetaValueMustBeMap    = errors.New("meta value must be map")
+	ErrMetaValueMustBeArray  = errors.New("meta value must be array")
 	ErrMetaEmpty             = errors.New("meta is empty")
+	ErrBadPointerSize        = errors.New("bad pointer size")
+	ErrBadPointer            = errors.New("bad pointer")
 )

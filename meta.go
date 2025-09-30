@@ -94,14 +94,12 @@ func (c *conn) decodeMeta() error {
 
 	for i := 0; i < int(size); i++ {
 		ctrlb = c.bufm[off]
+		off++
 		et1 := entryType(ctrlb >> 5)
 		if et1 != entryString {
-			println(string(c.bufm[off : off+30])) // todo remove me
-			println(et1)                          // todo remove me
 			return ErrMetaKeyMustBeString
 		}
 		size1 := ctrlb & 0x1f
-		off++
 		key := string(c.bufm[off : off+int(size1)])
 		off += int(size1)
 		println(key) // todo remove me
@@ -122,16 +120,33 @@ func (c *conn) decodeMeta() error {
 		case "database_type":
 			off, err = c.mustString(off, &c.meta.dbType)
 		case "languages":
-			// todo implement me
+			ctrlb = c.bufm[off]
+			off++
+			et2 := entryType(ctrlb >> 5)
+			if et2 == entryExtended {
+				et2 = entryType(c.bufm[off] + 7)
+				off++
+			}
+			if et2 != entryArray {
+				return ErrMetaValueMustBeArray
+			}
+			size2 := ctrlb & 0x1f
+			for j := 0; j < int(size2); j++ {
+				var s string
+				if off, err = c.mustString(off, &s); err != nil {
+					break
+				}
+				c.meta.lang = append(c.meta.lang, s)
+			}
 		case "description":
 			ctrlb = c.bufm[off]
+			off++
 			et2 := entryType(ctrlb >> 5)
 			if et2 != entryMap {
 				return ErrMetaValueMustBeMap
 			}
 			size2 := ctrlb & 0x1f
-			off++
-			for i := 0; i < int(size2); i++ {
+			for j := 0; j < int(size2); j++ {
 				var k, v string
 				if off, err = c.mustString(off, &k); err != nil {
 					break
@@ -199,11 +214,33 @@ func (c *conn) mustString(off int, result *string) (int, error) {
 	ctrlb := c.bufm[off]
 	off++
 	etype := entryType(ctrlb >> 5)
+	if etype == entryExtended {
+		if off > len(c.bufm) {
+			return off, io.ErrUnexpectedEOF
+		}
+		etype = entryType(c.bufm[off] + 7)
+		off++
+	}
+	size := int(ctrlb & 0x1f)
+	if etype == entryPointer {
+		off1, _, err := decodePtr(c.bufm, uint64(off), uint64(size))
+		if err != nil {
+			return off, err
+		}
+		if off1 >= uint64(len(c.bufm)) {
+			return off, io.ErrUnexpectedEOF
+		}
+		ctrlb = c.bufm[off1]
+		if (ctrlb >> 5) == 1 {
+			return off, ErrBadPointer
+		}
+		*result = byteconv.B2S(c.bufm[off1 : off1+uint64(size)])
+		return int(off1), nil
+	}
 	if etype != entryString {
 		println(etype)
 		return off, ErrMetaValueMustBeString
 	}
-	size := int(ctrlb & 0x1f)
 	*result = byteconv.B2S(c.bufm[off : off+size])
 	off += size
 	return off, nil
