@@ -7,6 +7,7 @@ var (
 	ErrMetaRootMustBeMap     = errors.New("meta root must be a map")
 	ErrMetaKeyMustBeString   = errors.New("meta key must be a string")
 	ErrMetaValueMustBeUint16 = errors.New("meta value must be uint16 number")
+	ErrMetaValueMustBeUint32 = errors.New("meta value must be uint32 number")
 	ErrMetaValueMustBeUint64 = errors.New("meta value must be uint64 number")
 	ErrMetaValueMustBeString = errors.New("meta value must be string")
 	ErrMetaValueMustBeMap    = errors.New("meta value must be map")

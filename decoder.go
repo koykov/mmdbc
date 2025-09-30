@@ -14,6 +14,18 @@ func decodeUint16(buf []byte, offset, size uint64) (uint16, uint64, error) {
 	return r, offset + size, nil
 }
 
+func decodeUint32(buf []byte, offset, size uint64) (uint32, uint64, error) {
+	if offset+size > uint64(len(buf)) {
+		return 0, 0, io.ErrUnexpectedEOF
+	}
+	b := buf[offset : offset+size]
+	var r uint32
+	for i := 0; i < len(b); i++ {
+		r = (r << 8) | uint32(b[i])
+	}
+	return r, offset + size, nil
+}
+
 func decodeUint64(buf []byte, offset, size uint64) (uint64, uint64, error) {
 	if offset+size > uint64(len(buf)) {
 		return 0, 0, io.ErrUnexpectedEOF

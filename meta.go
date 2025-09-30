@@ -106,7 +106,7 @@ func (c *conn) decodeMeta() error {
 		var err error
 		switch key {
 		case "node_count":
-			off, err = c.mustUint16(off, &c.meta.nodec)
+			off, err = c.mustUint32(off, &c.meta.nodec)
 		case "record_size":
 			off, err = c.mustUint16(off, &c.meta.recSize)
 		case "ip_version":
@@ -182,7 +182,29 @@ func (c *conn) mustUint16(off uint64, result *uint64) (uint64, error) {
 		return off, ErrMetaValueMustBeUint16
 	}
 	size := ctrlb & 0x1f
-	v, _, err := decodeUint16(c.bufm, uint64(off), uint64(size))
+	v, _, err := decodeUint16(c.bufm, off, uint64(size))
+	off += uint64(size)
+	*result = uint64(v)
+	return off, err
+}
+
+func (c *conn) mustUint32(off uint64, result *uint64) (uint64, error) {
+	ctrlb := c.bufm[off]
+	off++
+	etype := entryType(ctrlb >> 5)
+	if etype == entryExtended {
+		if off > uint64(len(c.bufm)) {
+			return off, io.ErrUnexpectedEOF
+		}
+		etype = entryType(c.bufm[off] + 7)
+		off++
+	}
+	if etype != entryUint32 {
+		println(etype) // todo remove me
+		return off, ErrMetaValueMustBeUint32
+	}
+	size := ctrlb & 0x1f
+	v, _, err := decodeUint32(c.bufm, off, uint64(size))
 	off += uint64(size)
 	*result = uint64(v)
 	return off, err
@@ -204,7 +226,7 @@ func (c *conn) mustUint64(off uint64, result *uint64) (uint64, error) {
 		return off, ErrMetaValueMustBeUint64
 	}
 	size := ctrlb & 0x1f
-	v, _, err := decodeUint64(c.bufm, uint64(off), uint64(size))
+	v, _, err := decodeUint64(c.bufm, off, uint64(size))
 	off += uint64(size)
 	*result = v
 	return off, err
