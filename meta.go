@@ -240,6 +240,23 @@ func (c *conn) mustString(off uint64, result *string) (uint64, error) {
 		off++
 	}
 	size := uint64(ctrlb & 0x1f)
+	if size >= 29 {
+		off1 := off + size - 28
+		if off1 >= uint64(len(c.bufm)) {
+			return off, io.ErrUnexpectedEOF
+		}
+		if size == 29 {
+			size = 29 + uint64(c.bufm[off])
+			off = off1
+		} else {
+			b := c.bufm[off:off1]
+			if size == 30 {
+				size = encodeBytes(b, 0) + 285
+			} else {
+				size = encodeBytes(b, 0) + 65821
+			}
+		}
+	}
 	if etype == entryPointer {
 		off, off1, err := decodePtr(c.bufm, off, size)
 		if err != nil {
