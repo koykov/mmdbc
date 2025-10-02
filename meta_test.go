@@ -138,3 +138,24 @@ func TestMeta(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkMeta(b *testing.B) {
+	tcs := []string{
+		"MaxMind-DB-test-metadata-pointers",
+	}
+	for _, tc := range tcs {
+		b.Run(tc, func(b *testing.B) {
+			fpath := fmt.Sprintf("/tmp/mmdb-test/%s.mmdb", tc)
+			c, err := connect(fpath)
+			if err != nil {
+				b.Fatal(err)
+			}
+			b.ResetTimer()
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				c.meta.reset()
+				_ = c.decodeMeta()
+			}
+		})
+	}
+}

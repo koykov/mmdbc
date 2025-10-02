@@ -100,7 +100,7 @@ func (c *conn) decodeMeta() error {
 			return ErrMetaKeyMustBeString
 		}
 		size1 := ctrlb & 0x1f
-		key := string(c.bufm[off : off+uint64(size1)])
+		key := byteconv.B2S(c.bufm[off : off+uint64(size1)])
 		off += uint64(size1)
 		var err error
 		switch key {

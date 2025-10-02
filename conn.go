@@ -19,6 +19,10 @@ type Connection interface {
 }
 
 func Connect(filePath string) (c Connection, err error) {
+	return connect(filePath)
+}
+
+func connect(filePath string) (c *conn, err error) {
 	var f *os.File
 	if f, err = os.Open(filePath); err != nil {
 		return
