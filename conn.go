@@ -10,6 +10,7 @@ import (
 const metaPrefix = "\xAB\xCD\xEFMaxMind.com"
 
 type Connection interface {
+	Meta() *Meta
 	Get(ip netip.Addr) (*Tuple, error)
 	Gets(ip string) (*Tuple, error)
 	PGet(dst *Tuple, ip netip.Addr) error
@@ -47,6 +48,10 @@ type conn struct {
 	buf  []byte
 	bufm []byte
 	meta Meta
+}
+
+func (c *conn) Meta() *Meta {
+	return &c.meta
 }
 
 func (c *conn) Get(ip netip.Addr) (*Tuple, error) {
