@@ -281,24 +281,3 @@ func (c *conn) mustString(off uint64, result *string) (uint64, error) {
 	off += size
 	return off, nil
 }
-
-var (
-	metaKeys = []string{
-		"node_count",
-		"record_size",
-		"ip_version",
-		"binary_format_major_version",
-		"binary_format_minor_version",
-		"build_epoch",
-		"database_type",
-		"languages",
-		"description",
-	}
-	metaBKeys [][]byte
-)
-
-func init() {
-	for i := range metaKeys {
-		metaBKeys = append(metaBKeys, []byte(metaKeys[i]))
-	}
-}
