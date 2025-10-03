@@ -7,9 +7,6 @@ import (
 )
 
 func decode(buf []byte, offset, size, depth uint64, dst any) (uint64, error) {
-	if offset+size > uint64(len(buf)) {
-		return offset, io.ErrUnexpectedEOF
-	}
 	ctrlb := buf[offset]
 	offset++
 	etype := entryType(ctrlb >> 5)
@@ -38,6 +35,9 @@ func decode(buf []byte, offset, size, depth uint64, dst any) (uint64, error) {
 				size = b2u(b, 0) + 65821
 			}
 		}
+	}
+	if offset+size > uint64(len(buf)) {
+		return offset, io.ErrUnexpectedEOF
 	}
 
 	if etype == entryPointer {
