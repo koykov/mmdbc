@@ -15,4 +15,5 @@ var (
 	ErrMetaEmpty             = errors.New("meta is empty")
 	ErrBadPointerSize        = errors.New("bad pointer size")
 	ErrBadPointer            = errors.New("bad pointer")
+	ErrUnknownType           = errors.New("unknown type")
 )

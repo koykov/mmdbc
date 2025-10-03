@@ -251,9 +251,9 @@ func (c *conn) mustString(off uint64, result *string) (uint64, error) {
 		} else {
 			b := c.bufm[off:off1]
 			if size == 30 {
-				size = encodeBytes(b, 0) + 285
+				size = b2u(b, 0) + 285
 			} else {
-				size = encodeBytes(b, 0) + 65821
+				size = b2u(b, 0) + 65821
 			}
 		}
 	}
