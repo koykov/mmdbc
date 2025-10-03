@@ -125,7 +125,7 @@ func TestMeta(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.fname, func(t *testing.T) {
-			fpath := fmt.Sprintf("/tmp/mmdb-test/%s.mmdb", tc.fname)
+			fpath := fmt.Sprintf("testdata/%s.mmdb", tc.fname)
 			cn, err := Connect(fpath)
 			if err != nil {
 				t.Error(err)
@@ -145,7 +145,7 @@ func BenchmarkMeta(b *testing.B) {
 	}
 	for _, tc := range tcs {
 		b.Run(tc, func(b *testing.B) {
-			fpath := fmt.Sprintf("/tmp/mmdb-test/%s.mmdb", tc)
+			fpath := fmt.Sprintf("testdata/%s.mmdb", tc)
 			c, err := connect(fpath)
 			if err != nil {
 				b.Fatal(err)
