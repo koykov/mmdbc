@@ -122,7 +122,7 @@ func decodePtr(buf []byte, offset, size uint64) (uint64, uint64, error) {
 		pfx = size & 0x7
 	}
 	unpack := b2u(buf[offset:offset+ptrsz], pfx)
-	if ptrsz != 4 {
+	if ptrsz > 4 {
 		return 0, 0, ErrBadPointerSize
 	}
 	ptroff := ptrsz2off[ptrsz-1]
