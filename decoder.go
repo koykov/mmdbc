@@ -75,40 +75,12 @@ func decode(buf []byte, offset, size, depth uint64, dst any) (uint64, error) {
 	return offset, nil
 }
 
-func decodeUint16(buf []byte, offset, size uint64) (uint16, uint64, error) {
-	if offset+size > uint64(len(buf)) {
-		return 0, 0, io.ErrUnexpectedEOF
+func b2u(buf []byte, pfx uint64) (r uint64) {
+	r = pfx
+	for i := 0; i < len(buf); i++ {
+		r = (r << 8) | uint64(buf[i])
 	}
-	b := buf[offset : offset+size]
-	var r uint16
-	for i := 0; i < len(b); i++ {
-		r = (r << 8) | uint16(b[i])
-	}
-	return r, offset + size, nil
-}
-
-func decodeUint32(buf []byte, offset, size uint64) (uint32, uint64, error) {
-	if offset+size > uint64(len(buf)) {
-		return 0, 0, io.ErrUnexpectedEOF
-	}
-	b := buf[offset : offset+size]
-	var r uint32
-	for i := 0; i < len(b); i++ {
-		r = (r << 8) | uint32(b[i])
-	}
-	return r, offset + size, nil
-}
-
-func decodeUint64(buf []byte, offset, size uint64) (uint64, uint64, error) {
-	if offset+size > uint64(len(buf)) {
-		return 0, 0, io.ErrUnexpectedEOF
-	}
-	b := buf[offset : offset+size]
-	var r uint64
-	for i := 0; i < len(b); i++ {
-		r = (r << 8) | uint64(b[i])
-	}
-	return r, offset + size, nil
+	return
 }
 
 func decodePtr(buf []byte, offset, size uint64) (uint64, uint64, error) {
@@ -127,14 +99,6 @@ func decodePtr(buf []byte, offset, size uint64) (uint64, uint64, error) {
 	}
 	ptroff := ptrsz2off[ptrsz-1]
 	return unpack + ptroff, nextoff, nil
-}
-
-func b2u(buf []byte, pfx uint64) (r uint64) {
-	r = pfx
-	for i := 0; i < len(buf); i++ {
-		r = (r << 8) | uint64(buf[i])
-	}
-	return
 }
 
 var ptrsz2off = [4]uint64{0, 2048, 526336, 0}

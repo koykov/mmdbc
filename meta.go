@@ -2,7 +2,6 @@ package mmdbcli
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/koykov/byteconv"
 )
@@ -82,8 +81,8 @@ func (c *conn) decodeMeta() error {
 
 	var off uint64
 	ctrlb := c.bufm[off]
-	et := entryType(ctrlb >> 5)
-	if et != entryMap {
+	etype := entryType(ctrlb >> 5)
+	if etype != entryMap {
 		return ErrMetaRootMustBeMap
 	}
 	size := ctrlb & 0x1f
@@ -95,29 +94,29 @@ func (c *conn) decodeMeta() error {
 	for i := 0; i < int(size); i++ {
 		ctrlb = c.bufm[off]
 		off++
-		et1 := entryType(ctrlb >> 5)
-		if et1 != entryString {
+		etype1 := entryType(ctrlb >> 5)
+		if etype1 != entryString {
 			return ErrMetaKeyMustBeString
 		}
-		size1 := ctrlb & 0x1f
-		key := byteconv.B2S(c.bufm[off : off+uint64(size1)])
-		off += uint64(size1)
+		size1 := uint64(ctrlb & 0x1f)
+		key := byteconv.B2S(c.bufm[off : off+size1])
+		off += size1
 		var err error
 		switch key {
 		case "node_count":
-			off, err = c.mustUint32(off, &c.meta.nodec)
+			off, err = decode(c.bufm, off, 0, 0, &c.meta.nodec)
 		case "record_size":
-			off, err = c.mustUint16(off, &c.meta.recSize)
+			off, err = decode(c.bufm, off, 0, 0, &c.meta.recSize)
 		case "ip_version":
-			off, err = c.mustUint16(off, &c.meta.ipVer)
+			off, err = decode(c.bufm, off, 0, 0, &c.meta.ipVer)
 		case "binary_format_major_version":
-			off, err = c.mustUint16(off, &c.meta.bfmaj)
+			off, err = decode(c.bufm, off, 0, 0, &c.meta.bfmaj)
 		case "binary_format_minor_version":
-			off, err = c.mustUint16(off, &c.meta.bfmin)
+			off, err = decode(c.bufm, off, 0, 0, &c.meta.bfmin)
 		case "build_epoch":
-			off, err = c.mustUint64(off, &c.meta.epoch)
+			off, err = decode(c.bufm, off, 0, 0, &c.meta.epoch)
 		case "database_type":
-			off, err = c.mustString(off, &c.meta.dbType)
+			off, err = decode(c.bufm, off, 0, 0, &c.meta.dbType)
 		case "languages":
 			ctrlb = c.bufm[off]
 			off++
@@ -132,7 +131,7 @@ func (c *conn) decodeMeta() error {
 			size2 := ctrlb & 0x1f
 			for j := 0; j < int(size2); j++ {
 				var s string
-				if off, err = c.mustString(off, &s); err != nil {
+				if off, err = decode(c.bufm, off, 0, 0, &s); err != nil {
 					break
 				}
 				c.meta.lang = append(c.meta.lang, s)
@@ -147,10 +146,10 @@ func (c *conn) decodeMeta() error {
 			size2 := ctrlb & 0x1f
 			for j := 0; j < int(size2); j++ {
 				var k, v string
-				if off, err = c.mustString(off, &k); err != nil {
+				if off, err = decode(c.bufm, off, 0, 0, &k); err != nil {
 					break
 				}
-				if off, err = c.mustString(off, &v); err != nil {
+				if off, err = decode(c.bufm, off, 0, 0, &v); err != nil {
 					break
 				}
 				c.meta.desc[k] = v
@@ -163,121 +162,4 @@ func (c *conn) decodeMeta() error {
 		}
 	}
 	return nil
-}
-
-func (c *conn) mustUint16(off uint64, result *uint64) (uint64, error) {
-	ctrlb := c.bufm[off]
-	off++
-	etype := entryType(ctrlb >> 5)
-	if etype == entryExtended {
-		if off > uint64(len(c.bufm)) {
-			return off, io.ErrUnexpectedEOF
-		}
-		etype = entryType(c.bufm[off] + 7)
-		off++
-	}
-	if etype != entryUint16 {
-		return off, ErrMetaValueMustBeUint16
-	}
-	size := ctrlb & 0x1f
-	v, _, err := decodeUint16(c.bufm, off, uint64(size))
-	off += uint64(size)
-	*result = uint64(v)
-	return off, err
-}
-
-func (c *conn) mustUint32(off uint64, result *uint64) (uint64, error) {
-	ctrlb := c.bufm[off]
-	off++
-	etype := entryType(ctrlb >> 5)
-	if etype == entryExtended {
-		if off > uint64(len(c.bufm)) {
-			return off, io.ErrUnexpectedEOF
-		}
-		etype = entryType(c.bufm[off] + 7)
-		off++
-	}
-	if etype != entryUint32 {
-		return off, ErrMetaValueMustBeUint32
-	}
-	size := ctrlb & 0x1f
-	v, _, err := decodeUint32(c.bufm, off, uint64(size))
-	off += uint64(size)
-	*result = uint64(v)
-	return off, err
-}
-
-func (c *conn) mustUint64(off uint64, result *uint64) (uint64, error) {
-	ctrlb := c.bufm[off]
-	off++
-	etype := entryType(ctrlb >> 5)
-	if etype == entryExtended {
-		if off > uint64(len(c.bufm)) {
-			return off, io.ErrUnexpectedEOF
-		}
-		etype = entryType(c.bufm[off] + 7)
-		off++
-	}
-	if etype != entryUint64 {
-		return off, ErrMetaValueMustBeUint64
-	}
-	size := ctrlb & 0x1f
-	v, _, err := decodeUint64(c.bufm, off, uint64(size))
-	off += uint64(size)
-	*result = v
-	return off, err
-}
-
-func (c *conn) mustString(off uint64, result *string) (uint64, error) {
-	ctrlb := c.bufm[off]
-	off++
-	etype := entryType(ctrlb >> 5)
-	if etype == entryExtended {
-		if off > uint64(len(c.bufm)) {
-			return off, io.ErrUnexpectedEOF
-		}
-		etype = entryType(c.bufm[off] + 7)
-		off++
-	}
-	size := uint64(ctrlb & 0x1f)
-	if size >= 29 {
-		off1 := off + size - 28
-		if off1 >= uint64(len(c.bufm)) {
-			return off, io.ErrUnexpectedEOF
-		}
-		if size == 29 {
-			size = 29 + uint64(c.bufm[off])
-			off = off1
-		} else {
-			b := c.bufm[off:off1]
-			if size == 30 {
-				size = b2u(b, 0) + 285
-			} else {
-				size = b2u(b, 0) + 65821
-			}
-		}
-	}
-	if etype == entryPointer {
-		off, off1, err := decodePtr(c.bufm, off, size)
-		if err != nil {
-			return off, err
-		}
-		if off1 >= uint64(len(c.bufm)) {
-			return off, io.ErrUnexpectedEOF
-		}
-		ctrlb = c.bufm[off]
-		if (ctrlb >> 5) == 1 {
-			return off, ErrBadPointer
-		}
-		if _, err = c.mustString(off, result); err != nil {
-			return off1, err
-		}
-		return off1, nil
-	}
-	if etype != entryString {
-		return off, ErrMetaValueMustBeString
-	}
-	*result = byteconv.B2S(c.bufm[off : off+size])
-	off += size
-	return off, nil
 }
