@@ -2,6 +2,7 @@ package mmdbcli
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/netip"
 	"os"
@@ -11,10 +12,10 @@ const metaPrefix = "\xAB\xCD\xEFMaxMind.com"
 
 type Connection interface {
 	Meta() *Meta
-	Get(ip netip.Addr) (*Tuple, error)
-	Gets(ip string) (*Tuple, error)
-	PGet(dst *Tuple, ip netip.Addr) error
-	PGets(dst *Tuple, ip string) error
+	Get(ctx context.Context, ip netip.Addr) (*Tuple, error)
+	Gets(ctx context.Context, ip string) (*Tuple, error)
+	PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error
+	PGets(ctx context.Context, dst *Tuple, ip string) error
 	io.Closer
 }
 
@@ -58,22 +59,26 @@ func (c *conn) Meta() *Meta {
 	return &c.meta
 }
 
-func (c *conn) Get(ip netip.Addr) (*Tuple, error) {
+func (c *conn) Get(ctx context.Context, ip netip.Addr) (*Tuple, error) {
+	_, _ = ctx, ip
 	// todo implement me
 	return nil, nil
 }
 
-func (c *conn) Gets(ip string) (*Tuple, error) {
+func (c *conn) Gets(ctx context.Context, ip string) (*Tuple, error) {
+	_, _ = ctx, ip
 	// todo implement me
 	return nil, nil
 }
 
-func (c *conn) PGet(dst *Tuple, ip netip.Addr) error {
+func (c *conn) PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error {
+	_, _, _ = ctx, dst, ip
 	// todo implement me
 	return nil
 }
 
-func (c *conn) PGets(dst *Tuple, ip string) error {
+func (c *conn) PGets(ctx context.Context, dst *Tuple, ip string) error {
+	_, _, _ = ctx, dst, ip
 	// todo implement me
 	return nil
 }
