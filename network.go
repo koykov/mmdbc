@@ -30,7 +30,19 @@ func (c *conn) EachNetworkWithOptions(ctx context.Context, fn func(*Tuple) error
 	if c.meta.ipVer == 4 && pfx.Addr().Is6() {
 		return ErrOverflowPrefix
 	}
-	addr := pfx.Addr()
+
+	addr, bits := pfx.Addr(), pfx.Bits()
+	if addr.Is4() {
+		raw := addr.As4()
+		var raw6 [16]byte
+		copy(raw6[12:], raw[:])
+		addr = netip.AddrFrom16(raw6)
+		bits += 96
+	}
+	if bits > 128 {
+		return ErrOverflowIPv6
+	}
+
 	return c.eachNetwork(ctx, &addr, pfx.Bits(), fn, options)
 }
 

@@ -16,4 +16,5 @@ var (
 
 	ErrInvalidPrefix  = errors.New("invalid prefix")
 	ErrOverflowPrefix = errors.New("overflow prefix: use ipv6 over ipv4 database")
+	ErrOverflowIPv6   = errors.New("bits overflow ipv6 (128 bits)")
 )
