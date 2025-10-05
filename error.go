@@ -9,7 +9,11 @@ var (
 	ErrMetaValueMustBeMap   = errors.New("meta value must be map")
 	ErrMetaValueMustBeArray = errors.New("meta value must be array")
 	ErrMetaEmpty            = errors.New("meta is empty")
-	ErrBadPointerSize       = errors.New("bad pointer size")
-	ErrBadPointer           = errors.New("bad pointer")
-	ErrUnknownType          = errors.New("unknown type")
+
+	ErrBadPointerSize = errors.New("bad pointer size")
+	ErrBadPointer     = errors.New("bad pointer")
+	ErrUnknownType    = errors.New("unknown type")
+
+	ErrInvalidPrefix  = errors.New("invalid prefix")
+	ErrOverflowPrefix = errors.New("overflow prefix: use ipv6 over ipv4 database")
 )
