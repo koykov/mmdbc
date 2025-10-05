@@ -1,5 +1,7 @@
 package mmdbcli
 
+import "context"
+
 type NetworkOption uint64
 
 const (
@@ -13,12 +15,12 @@ const (
 	NetworkOptionAll                     = NetworkOptionIncludeAliased | NetworkOptionIncludeEmptyNetwork | NetworkOptionSkipEmptyTuple
 )
 
-func (c *conn) EachNetwork(fn func(*Tuple) error) error {
+func (c *conn) EachNetwork(ctx context.Context, fn func(*Tuple) error) error {
 	// todo implement me
 	return nil
 }
 
-func (c *conn) EachNetworkWithOptions(fn func(*Tuple) error, options NetworkOption) error {
+func (c *conn) EachNetworkWithOptions(ctx context.Context, fn func(*Tuple) error, options NetworkOption) error {
 	// todo implement me
 	return nil
 }
