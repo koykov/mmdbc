@@ -16,6 +16,8 @@ type Connection interface {
 	Gets(ctx context.Context, ip string) (*Tuple, error)
 	PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error
 	PGets(ctx context.Context, dst *Tuple, ip string) error
+	EachNetwork(ctx context.Context, fn func(*Tuple) error) error
+	EachNetworkWithOptions(ctx context.Context, fn func(*Tuple) error, options NetworkOption) error
 	io.Closer
 }
 
