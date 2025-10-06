@@ -8,10 +8,12 @@ var (
 	ErrMetaKeyMustBeString  = errors.New("meta key must be a string")
 	ErrMetaValueMustBeMap   = errors.New("meta value must be map")
 	ErrMetaValueMustBeArray = errors.New("meta value must be array")
+	ErrMetaIpVersion        = errors.New("meta ip version mut be 4 or 6")
 	ErrMetaEmpty            = errors.New("meta is empty")
 
 	ErrBadPointerSize = errors.New("bad pointer size")
 	ErrBadPointer     = errors.New("bad pointer")
+	ErrBadRecordSize  = errors.New("bad record size")
 	ErrUnknownType    = errors.New("unknown type")
 
 	ErrInvalidPrefix  = errors.New("invalid prefix")

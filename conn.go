@@ -47,14 +47,35 @@ func connect(filePath string) (c *conn, err error) {
 	if err = cn.decodeMeta(); err != nil {
 		return
 	}
+
+	cn.nodeoff = cn.meta.recSize / 4
+	switch c.meta.ipVer {
+	case 4:
+		cn.ipv4bits = 96
+	case 6:
+		var i, node uint64
+		for i = 0; i < 96 && node < cn.meta.nodec; i++ {
+			node, err = cn.getNode(node*cn.nodeoff, 0)
+			if err != nil {
+				return nil, err
+			}
+		}
+		c.ipv4off, c.ipv4bits = node, i
+	default:
+		return nil, ErrMetaIpVersion
+	}
+
 	c = cn
 	return
 }
 
 type conn struct {
-	buf  []byte
-	bufm []byte
-	meta Meta
+	buf      []byte
+	bufm     []byte
+	meta     Meta
+	nodeoff  uint64
+	ipv4off  uint64
+	ipv4bits uint64
 }
 
 func (c *conn) Meta() *Meta {
@@ -88,4 +109,22 @@ func (c *conn) PGets(ctx context.Context, dst *Tuple, ip string) error {
 func (c *conn) Close() error {
 	c.meta.reset()
 	return nil
+}
+
+func (c *conn) getNode(off, bit uint64) (uint64, error) {
+	switch c.meta.recSize {
+	case 24:
+		off += bit * 3
+		return (uint64(c.buf[off]) << 16) | (uint64(c.buf[off+1]) << 8) | uint64(c.buf[off+2]), nil
+	case 28:
+		if bit == 0 {
+			return ((uint64(c.buf[off+3]) & 0xF0) << 20) | (uint64(c.buf[off]) << 16) | (uint64(c.buf[off+1]) << 8) | uint64(c.buf[off+2]), nil
+		}
+		return ((uint64(c.buf[off+3]) & 0x0F) << 24) | (uint64(c.buf[off+4]) << 16) | (uint64(c.buf[off+5]) << 8) | uint64(c.buf[off+6]), nil
+	case 32:
+		off += bit * 4
+		return (uint64(c.buf[off]) << 24) | (uint64(c.buf[off+1]) << 16) | (uint64(c.buf[off+2]) << 8) | uint64(c.buf[off+3]), nil
+	default:
+		return 0, ErrBadRecordSize
+	}
 }
