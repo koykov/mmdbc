@@ -89,9 +89,11 @@ func (c *conn) Get(ctx context.Context, ip netip.Addr) (*Tuple, error) {
 }
 
 func (c *conn) Gets(ctx context.Context, ip string) (*Tuple, error) {
-	_, _ = ctx, ip
-	// todo implement me
-	return nil, nil
+	ip_, err := netip.ParseAddr(ip)
+	if err != nil {
+		return nil, err
+	}
+	return c.Get(ctx, ip_)
 }
 
 func (c *conn) PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error {
@@ -101,9 +103,11 @@ func (c *conn) PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error {
 }
 
 func (c *conn) PGets(ctx context.Context, dst *Tuple, ip string) error {
-	_, _, _ = ctx, dst, ip
-	// todo implement me
-	return nil
+	ip_, err := netip.ParseAddr(ip)
+	if err != nil {
+		return err
+	}
+	return c.PGet(ctx, dst, ip_)
 }
 
 func (c *conn) Close() error {
