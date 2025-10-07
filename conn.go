@@ -49,7 +49,7 @@ func connect(filePath string) (c *conn, err error) {
 	}
 
 	cn.nodeoff = cn.meta.recSize / 4
-	switch c.meta.ipVer {
+	switch cn.meta.ipVer {
 	case 4:
 		cn.ipv4bits = 96
 	case 6:
@@ -60,7 +60,7 @@ func connect(filePath string) (c *conn, err error) {
 				return nil, err
 			}
 		}
-		c.ipv4off, c.ipv4bits = node, i
+		cn.ipv4off, cn.ipv4bits = node, i
 	default:
 		return nil, ErrMetaIpVersion
 	}
