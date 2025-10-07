@@ -76,6 +76,8 @@ type conn struct {
 	nodeoff  uint64
 	ipv4off  uint64
 	ipv4bits uint64
+
+	trvrsNextFn func(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, uint64, error)
 }
 
 func (c *conn) Meta() *Meta {
