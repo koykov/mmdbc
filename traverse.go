@@ -13,9 +13,9 @@ func (c *conn) traverse(ctx context.Context, ip *netip.Addr, node uint64, bits i
 	var err error
 	raw := ip.As16()
 	for ; off < uint64(bits) && node < c.meta.nodec; off++ {
-		i := off >> 3
-		pos := 7 - (i & 7)
-		bit := (uint64(raw[i]) >> pos) & 1
+		idx := off >> 3
+		pos := 7 - (off & 7)
+		bit := (uint64(raw[idx]) >> pos) & 1
 		if node, _, err = c.trvrsNextFn(ctx, c, ip, node, bit, bits); err != nil {
 			return 0, 0, err
 		}
