@@ -14,11 +14,16 @@ func (c *conn) traverse(ctx context.Context, ip *netip.Addr, node uint64, bits i
 	var err error
 	raw := ip.As16()
 	for ; off < uint64(bits) && node < c.meta.nodec; off++ {
-		idx := off >> 3
-		pos := 7 - (off & 7)
-		bit := (uint64(raw[idx]) >> pos) & 1
-		if node, err = c.trvrsNextFn(ctx, c, ip, node, bit, bits); err != nil {
-			return 0, 0, err
+		select {
+		case <-ctx.Done():
+			return 0, 0, ctx.Err()
+		default:
+			idx := off >> 3
+			pos := 7 - (off & 7)
+			bit := (uint64(raw[idx]) >> pos) & 1
+			if node, err = c.trvrsNextFn(c, node, bit); err != nil {
+				return 0, 0, err
+			}
 		}
 	}
 	return node, off, nil
