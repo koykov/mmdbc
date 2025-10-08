@@ -65,6 +65,17 @@ func connect(filePath string) (c *conn, err error) {
 		return nil, ErrMetaIpVersion
 	}
 
+	switch cn.meta.recSize {
+	case 24:
+		cn.trvrsNextFn = traverse24
+	case 28:
+		cn.trvrsNextFn = traverse28
+	case 32:
+		cn.trvrsNextFn = traverse32
+	default:
+		return nil, ErrBadRecordSize
+	}
+
 	c = cn
 	return
 }
@@ -77,7 +88,7 @@ type conn struct {
 	ipv4off  uint64
 	ipv4bits uint64
 
-	trvrsNextFn func(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, uint64, error)
+	trvrsNextFn func(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, error)
 }
 
 func (c *conn) Meta() *Meta {

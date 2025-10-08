@@ -2,6 +2,7 @@ package mmdbcli
 
 import (
 	"context"
+	"io"
 	"net/netip"
 )
 
@@ -16,24 +17,41 @@ func (c *conn) traverse(ctx context.Context, ip *netip.Addr, node uint64, bits i
 		idx := off >> 3
 		pos := 7 - (off & 7)
 		bit := (uint64(raw[idx]) >> pos) & 1
-		if node, _, err = c.trvrsNextFn(ctx, c, ip, node, bit, bits); err != nil {
+		if node, err = c.trvrsNextFn(ctx, c, ip, node, bit, bits); err != nil {
 			return 0, 0, err
 		}
 	}
 	return node, off, nil
 }
 
-func traverse24(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, uint64, error) {
-	// todo implement me
-	return 0, 0, nil
+func traverse24(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, error) {
+	i := node * 6
+	off := i + bit*3
+	if off > uint64(len(c.buf))-3 {
+		return 0, io.ErrUnexpectedEOF
+	}
+	node = (uint64(c.buf[off]) << 16) | (uint64(c.buf[off+1]) << 8) | uint64(c.buf[off+2])
+	return node, nil
 }
 
-func traverse28(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, uint64, error) {
-	// todo implement me
-	return 0, 0, nil
+func traverse28(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, error) {
+	i := node * 7
+	off := i + bit*4
+	if off > uint64(len(c.buf))-3 {
+		return 0, io.ErrUnexpectedEOF
+	}
+	mask := uint64(0xf0 >> (bit * 4))
+	sh := bit*4 + 20
+	node = ((uint64(c.buf[off+3]) & mask) << sh) | (uint64(c.buf[off]) << 16) | (uint64(c.buf[off+1]) << 8) | uint64(c.buf[off+2])
+	return node, nil
 }
 
-func traverse32(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, uint64, error) {
-	// todo implement me
-	return 0, 0, nil
+func traverse32(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, error) {
+	i := node * 8
+	off := i + bit*4
+	if off > uint64(len(c.buf))-4 {
+		return 0, io.ErrUnexpectedEOF
+	}
+	node = (uint64(c.buf[off]) << 24) | (uint64(c.buf[off+1]) << 16) | (uint64(c.buf[off+2]) << 8) | uint64(c.buf[off+2])
+	return node, nil
 }
