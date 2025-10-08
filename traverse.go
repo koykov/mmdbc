@@ -24,7 +24,7 @@ func (c *conn) traverse(ctx context.Context, ip *netip.Addr, node uint64, bits i
 	return node, off, nil
 }
 
-func traverse24(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, error) {
+func traverse24(c *conn, node, bit uint64) (uint64, error) {
 	i := node * 6
 	off := i + bit*3
 	if off > uint64(len(c.buf))-3 {
@@ -34,7 +34,7 @@ func traverse24(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, 
 	return node, nil
 }
 
-func traverse28(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, error) {
+func traverse28(c *conn, node, bit uint64) (uint64, error) {
 	i := node * 7
 	off := i + bit*4
 	if off > uint64(len(c.buf))-3 {
@@ -46,12 +46,12 @@ func traverse28(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, 
 	return node, nil
 }
 
-func traverse32(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, error) {
+func traverse32(c *conn, node, bit uint64) (uint64, error) {
 	i := node * 8
 	off := i + bit*4
 	if off > uint64(len(c.buf))-4 {
 		return 0, io.ErrUnexpectedEOF
 	}
-	node = (uint64(c.buf[off]) << 24) | (uint64(c.buf[off+1]) << 16) | (uint64(c.buf[off+2]) << 8) | uint64(c.buf[off+2])
+	node = (uint64(c.buf[off]) << 24) | (uint64(c.buf[off+1]) << 16) | (uint64(c.buf[off+2]) << 8) | uint64(c.buf[off+3])
 	return node, nil
 }

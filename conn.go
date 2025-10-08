@@ -88,7 +88,7 @@ type conn struct {
 	ipv4off  uint64
 	ipv4bits uint64
 
-	trvrsNextFn func(ctx context.Context, c *conn, ip *netip.Addr, node, bit uint64, stopbit int) (uint64, error)
+	trvrsNextFn func(c *conn, node, bit uint64) (uint64, error)
 }
 
 func (c *conn) Meta() *Meta {
@@ -121,6 +121,11 @@ func (c *conn) PGets(ctx context.Context, dst *Tuple, ip string) error {
 		return err
 	}
 	return c.PGet(ctx, dst, ip_)
+}
+
+func (c *conn) Validate() error {
+	// todo implement me
+	return nil
 }
 
 func (c *conn) Close() error {
