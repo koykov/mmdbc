@@ -71,4 +71,50 @@ echo "$MMDB_LIST" | xargs -P "$THREADS" -I {} bash -c '
     exit 1
 ' _ {}
 
+SRC_LIST="GeoIP-Anonymous-Plus-Test
+GeoIP2-Anonymous-IP-Test
+GeoIP2-City-Test
+GeoIP2-Connection-Type-Test
+GeoIP2-Country-Test
+GeoIP2-DensityIncome-Test
+GeoIP2-Domain-Test
+GeoIP2-Enterprise-Test
+GeoIP2-IP-Risk-Test
+GeoIP2-ISP-Test
+GeoIP2-Precision-Enterprise-Sandbox-Test
+GeoIP2-Precision-Enterprise-Test
+GeoIP2-Static-IP-Score-Test
+GeoIP2-User-Count-Test
+GeoLite2-ASN-Test
+GeoLite2-City-Test
+GeoLite2-Country-Test"
+
+echo "done"
+
+echo "download test source file in $THREADS threads:"
+
+echo "$SRC_LIST" | xargs -P "$THREADS" -I {} bash -c '
+    file="$1"
+    url="https://raw.githubusercontent.com/maxmind/MaxMind-DB/refs/heads/main/source-data/${file}.json"
+    output="testdata/${file}.json"
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -L -f -s -o "$output" "$url"; then
+            echo "* $file"
+            exit 0
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -O "$output" "$url"; then
+            echo "* $file"
+            exit 0
+        fi
+    else
+        echo "Error: neither curl nor wget available"
+        exit 1
+    fi
+
+    echo "failed $file"
+    exit 1
+' _ {}
+
 echo "done"
