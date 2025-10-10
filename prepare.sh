@@ -4,7 +4,7 @@ set -e
 
 THREADS=${1:-8}
 
-MMD_LIST="GeoIP2-Anonymous-IP-Test
+MMDB_LIST="GeoIP2-Anonymous-IP-Test
 GeoIP2-City-Shield-Test
 GeoIP2-City-Test-Broken-Double-Format
 GeoIP2-City-Test-Invalid-Node-Count
@@ -47,7 +47,7 @@ MaxMind-DB-test-pointer-decoder"
 
 echo "download test mmdb file in $THREADS threads:"
 
-echo "$MMD_LIST" | xargs -P "$THREADS" -I {} bash -c '
+echo "$MMDB_LIST" | xargs -P "$THREADS" -I {} bash -c '
     file="$1"
     url="https://github.com/maxmind/MaxMind-DB/raw/refs/heads/main/test-data/${file}.mmdb"
     output="testdata/${file}.mmdb"
