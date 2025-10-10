@@ -52,15 +52,29 @@ func (c *conn) EachNetworkWithOptions(ctx context.Context, fn func(*Tuple) error
 		return err
 	}
 
-	if err = c.netwalk(ctx, root, fn, options, 0); err != nil {
+	pfxAddr := pfx.Addr()
+	if err = c.netwalk(ctx, root, &pfxAddr, fn, options, 0); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *conn) netwalk(ctx context.Context, root uint64, fn func(*Tuple) error, options NetworkOption, depth int) error {
-	// todo implement me
+func (c *conn) netwalk(ctx context.Context, root uint64, addr *netip.Addr, fn func(*Tuple) error, options NetworkOption, depth int) error {
+	for {
+		if root == c.meta.nodec {
+			if options&NetworkOptionIncludeEmptyNetwork != 0 {
+				_ = fn(&Tuple{})
+			}
+			break
+		}
+		if root == c.ipv4off && options&NetworkOptionIncludeAliased == 0 && !addr.Is4() {
+			break
+		}
+		if root > c.meta.nodec {
+			// todo complete me
+		}
+	}
 	return nil
 }
 
