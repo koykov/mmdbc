@@ -96,9 +96,11 @@ func (c *conn) Meta() *Meta {
 }
 
 func (c *conn) Get(ctx context.Context, ip netip.Addr) (*Tuple, error) {
-	_, _ = ctx, ip
-	// todo implement me
-	return nil, nil
+	var t Tuple
+	if err := c.PGet(ctx, &t, ip); err != nil {
+		return nil, err
+	}
+	return &t, nil
 }
 
 func (c *conn) Gets(ctx context.Context, ip string) (*Tuple, error) {
