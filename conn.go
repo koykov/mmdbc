@@ -112,8 +112,32 @@ func (c *conn) Gets(ctx context.Context, ip string) (*Tuple, error) {
 }
 
 func (c *conn) PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error {
-	_, _, _ = ctx, dst, ip
-	// todo implement me
+	if c.meta.ipVer == 4 && ip.Is6() {
+		return ErrOverflowPrefix
+	}
+	node, pfx, err := c.traverse(ctx, &ip, 0, 128)
+	if err != nil {
+		return err
+	}
+	if node == c.meta.nodec {
+		return nil // empty node
+	}
+	if node < c.meta.nodec {
+		return ErrBadNode
+	}
+
+	minNode := c.meta.nodec + 16
+	if node < minNode {
+		return ErrBadDB
+	}
+	node -= minNode
+	if node >= uint64(len(c.buf)) {
+		return ErrBadDB
+	}
+
+	_, _ = node, pfx
+	_ = dst // todo compact node/pfx to dst
+
 	return nil
 }
 

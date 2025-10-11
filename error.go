@@ -14,6 +14,8 @@ var (
 	ErrBadPointerSize = errors.New("bad pointer size")
 	ErrBadPointer     = errors.New("bad pointer")
 	ErrBadRecordSize  = errors.New("bad record size")
+	ErrBadNode        = errors.New("bad node")
+	ErrBadDB          = errors.New("bad MMDB")
 	ErrUnknownType    = errors.New("unknown type")
 
 	ErrInvalidPrefix  = errors.New("invalid prefix")
