@@ -140,8 +140,9 @@ func (c *conn) PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error {
 		return ErrBadDB
 	}
 
-	_, _ = node, pfx
-	_ = dst // todo compact node/pfx to dst
+	dst.cnptr = c.selfptr
+	dst.off = node
+	dst.pfx = pfx
 
 	return nil
 }
