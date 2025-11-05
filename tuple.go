@@ -1,5 +1,6 @@
 package mmdbcli
 
 type Tuple struct {
-	p []byte
+	cnptr uintptr
+	off   uint64
 }

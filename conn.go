@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/netip"
 	"os"
+	"runtime"
+	"unsafe"
 )
 
 const metaPrefix = "\xAB\xCD\xEFMaxMind.com"
@@ -18,6 +20,7 @@ type Connection interface {
 	PGets(ctx context.Context, dst *Tuple, ip string) error
 	EachNetwork(ctx context.Context, fn func(*Tuple) error) error
 	EachNetworkWithOptions(ctx context.Context, fn func(*Tuple) error, options NetworkOption) error
+	KeepPtr()
 	io.Closer
 }
 
@@ -35,6 +38,7 @@ func connect(filePath string) (c *conn, err error) {
 		return
 	}
 	cn := &conn{buf: make([]byte, fi.Size())}
+	cn.selfptr = uintptr(unsafe.Pointer(cn))
 	if _, err = io.ReadFull(f, cn.buf); err != nil {
 		return
 	}
@@ -87,6 +91,7 @@ type conn struct {
 	nodeoff  uint64
 	ipv4off  uint64
 	ipv4bits uint64
+	selfptr  uintptr
 
 	trvrsNextFn func(c *conn, node, bit uint64) (uint64, error)
 }
@@ -157,6 +162,10 @@ func (c *conn) Validate() error {
 func (c *conn) Close() error {
 	c.meta.reset()
 	return nil
+}
+
+func (c *conn) KeepPtr() {
+	runtime.KeepAlive(c)
 }
 
 func (c *conn) getNode(off, bit uint64) (uint64, error) {
