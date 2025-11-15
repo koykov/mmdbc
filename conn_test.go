@@ -7,11 +7,11 @@ import (
 
 func TestConn(t *testing.T) {
 	t.Run("get", func(t *testing.T) {
-		c, err := Connect("testdata/GeoIP2-ISP-Test.mmdb")
+		c, err := Connect("testdata/GeoIP2-City-Test.mmdb")
 		if err != nil {
 			t.Fatal(err)
 		}
-		r, err := c.Gets(context.Background(), "1.128.0.0")
+		r, err := c.Gets(context.Background(), "81.2.69.142")
 		if err != nil {
 			t.Fatal(err)
 		}
