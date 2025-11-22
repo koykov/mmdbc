@@ -157,7 +157,14 @@ func (c *conn) PGets(ctx context.Context, dst *Record, ip string) error {
 
 func (c *conn) lookup(off uint64, path string) *Value {
 	_, _ = off, path
+	ctrlb := c.bufm[off]
+	etype := entryType(ctrlb >> 5)
+	size := ctrlb & 0x1f
+	if size == 0 {
+		return nil
+	}
 	// todo implement me
+	_ = etype
 	return nil
 }
 
