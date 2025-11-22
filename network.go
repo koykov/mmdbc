@@ -18,11 +18,11 @@ const (
 	NetworkOptionAll                     = NetworkOptionIncludeAliased | NetworkOptionIncludeEmptyNetwork | NetworkOptionSkipEmptyTuple
 )
 
-func (c *conn) EachNetwork(ctx context.Context, fn func(*Tuple) error) error {
+func (c *conn) EachNetwork(ctx context.Context, fn func(*Record) error) error {
 	return c.EachNetworkWithOptions(ctx, fn, NetworkOptionNoOptions)
 }
 
-func (c *conn) EachNetworkWithOptions(ctx context.Context, fn func(*Tuple) error, options NetworkOption) error {
+func (c *conn) EachNetworkWithOptions(ctx context.Context, fn func(*Record) error, options NetworkOption) error {
 	pfx := allpfx[c.meta.ipVer]
 	if !pfx.IsValid() {
 		return ErrInvalidPrefix
@@ -60,11 +60,11 @@ func (c *conn) EachNetworkWithOptions(ctx context.Context, fn func(*Tuple) error
 	return nil
 }
 
-func (c *conn) netwalk(ctx context.Context, root uint64, addr *netip.Addr, fn func(*Tuple) error, options NetworkOption, depth int) error {
+func (c *conn) netwalk(ctx context.Context, root uint64, addr *netip.Addr, fn func(*Record) error, options NetworkOption, depth int) error {
 	for {
 		if root == c.meta.nodec {
 			if options&NetworkOptionIncludeEmptyNetwork != 0 {
-				_ = fn(&Tuple{})
+				_ = fn(&Record{})
 			}
 			break
 		}
@@ -78,7 +78,7 @@ func (c *conn) netwalk(ctx context.Context, root uint64, addr *netip.Addr, fn fu
 	return nil
 }
 
-func (c *conn) eachNetwork(ctx context.Context, addr *netip.Addr, bits int, fn func(*Tuple) error, options NetworkOption) error {
+func (c *conn) eachNetwork(ctx context.Context, addr *netip.Addr, bits int, fn func(*Record) error, options NetworkOption) error {
 	// todo implement me
 	return nil
 }

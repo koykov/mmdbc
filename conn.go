@@ -14,12 +14,12 @@ const metaPrefix = "\xAB\xCD\xEFMaxMind.com"
 
 type Connection interface {
 	Meta() *Meta
-	Get(ctx context.Context, ip netip.Addr) (*Tuple, error)
-	Gets(ctx context.Context, ip string) (*Tuple, error)
-	PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error
-	PGets(ctx context.Context, dst *Tuple, ip string) error
-	EachNetwork(ctx context.Context, fn func(*Tuple) error) error
-	EachNetworkWithOptions(ctx context.Context, fn func(*Tuple) error, options NetworkOption) error
+	Get(ctx context.Context, ip netip.Addr) (*Record, error)
+	Gets(ctx context.Context, ip string) (*Record, error)
+	PGet(ctx context.Context, dst *Record, ip netip.Addr) error
+	PGets(ctx context.Context, dst *Record, ip string) error
+	EachNetwork(ctx context.Context, fn func(*Record) error) error
+	EachNetworkWithOptions(ctx context.Context, fn func(*Record) error, options NetworkOption) error
 	KeepPtr()
 	io.Closer
 }
@@ -100,15 +100,15 @@ func (c *conn) Meta() *Meta {
 	return &c.meta
 }
 
-func (c *conn) Get(ctx context.Context, ip netip.Addr) (*Tuple, error) {
-	var t Tuple
+func (c *conn) Get(ctx context.Context, ip netip.Addr) (*Record, error) {
+	var t Record
 	if err := c.PGet(ctx, &t, ip); err != nil {
 		return nil, err
 	}
 	return &t, nil
 }
 
-func (c *conn) Gets(ctx context.Context, ip string) (*Tuple, error) {
+func (c *conn) Gets(ctx context.Context, ip string) (*Record, error) {
 	ip_, err := netip.ParseAddr(ip)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (c *conn) Gets(ctx context.Context, ip string) (*Tuple, error) {
 	return c.Get(ctx, ip_)
 }
 
-func (c *conn) PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error {
+func (c *conn) PGet(ctx context.Context, dst *Record, ip netip.Addr) error {
 	if c.meta.ipVer == 4 && ip.Is6() {
 		return ErrOverflowPrefix
 	}
@@ -147,12 +147,18 @@ func (c *conn) PGet(ctx context.Context, dst *Tuple, ip netip.Addr) error {
 	return nil
 }
 
-func (c *conn) PGets(ctx context.Context, dst *Tuple, ip string) error {
+func (c *conn) PGets(ctx context.Context, dst *Record, ip string) error {
 	ip_, err := netip.ParseAddr(ip)
 	if err != nil {
 		return err
 	}
 	return c.PGet(ctx, dst, ip_)
+}
+
+func (c *conn) lookup(off uint64, path string) *Value {
+	_, _ = off, path
+	// todo implement me
+	return nil
 }
 
 func (c *conn) Validate() error {
